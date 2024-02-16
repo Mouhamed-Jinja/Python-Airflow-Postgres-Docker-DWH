@@ -10,7 +10,15 @@ services:
       POSTGRES_USER: postgres
     volumes:
       - pg-vol:/var/lib/postgresql/data
+    networks:
+      - pg-net
+  jupyter:
+    image: jupyter/datascience-notebook
+    container_name: jupyter
+    ports:
+      - "8888:8888"
+    networks:
+      - pg-net
 
-volumes:
-  pg-vol:
-  
+networks:
+  pg-net:
