@@ -9,7 +9,7 @@ def db_connection(user, password, host, port,db):
     return engine
 
 def Data_Stage_PG(engine):
-    df_iter = pd.read_csv(r'C:\Users\Mohammed\Desktop\retail-DWH\data\online_retail.csv', iterator=True, chunksize=100000)
+    df_iter = pd.read_csv(r'C:\Users\Mohammed\Desktop\retail-DWH\data\online_retail_2.csv', iterator=True, chunksize=100000)
     df= next(df_iter)
     df.head(n=0).to_sql(name='raw_data', con=engine, if_exists='replace', index=True, index_label='Id')
     try:
@@ -26,14 +26,14 @@ if __name__== "__main__":
 
     try:
         # List of database names to create
-        databases = ['bronze', 'silver', 'gold']
+        databases = ['retailDWH']
         metadata.create_databases('postgres', 'postgres', 'localhost', 5432, databases)
         print("Databases Created Successfully.")
     except Exception as e:
         print("Got Error in Creating the databases.", e)
             
     try:
-        db_engine= db_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='bronze')
+        db_engine= db_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='retaildwh')
         print(f"Successfully connected to PG Database.")
     except Exception as e:
         print("Got error in Engine-Connection: ", e)

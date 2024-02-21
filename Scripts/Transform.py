@@ -32,18 +32,29 @@ def data_cleanings(raw_data):
     third_quartile =df['Quantity'].quantile(0.75)
     IQR= third_quartile - first_quartile
     max_outlier= IQR*10+third_quartile  #max = IQR*10+Q3 threshold here is 10
-    df.loc[df['Quantity'] >max_outlier] = max_outlier
+    df.loc[df['Quantity'] > max_outlier, 'Quantity'] = max_outlier
     
     # Handling Outliers in Price
     Q1= df['UnitPrice'].quantile(0.25)
     Q3= df['UnitPrice'].quantile(0.75)
     IQR= Q3-Q1
     max_outlier= IQR*1.5+Q3  #not used
-    df.loc[df['UnitPrice'] >750]= 750
+    df.loc[df['UnitPrice'] >750, 'UnitPrice']= 750
     
+    
+    
+
     # Update datatypes
+    df['InvoiceDate']= pd.to_datetime( df['InvoiceDate'])
     df['CustomerID']= df['CustomerID'].astype(int)
-    df['InvoiceDate']= pd.to_datetime(df['InvoiceDate'])
+    df['Year']= df['InvoiceDate'].dt.strftime('%Y')
+    df['MonthNo']= df['InvoiceDate'].dt.strftime('%m')
+    df['Day']= df['InvoiceDate'].dt.strftime('%d')
+    df['saleskey'] = df['CustomerID'].astype(str) + df['StockCode'].astype(str) + df['Year']+df['MonthNo']+df['Day']
+    df= df.drop(columns= ['MonthNo', 'Year', 'Day'])
+    df.columns = df.columns.str.lower()
+    print(df[['saleskey']].head())
+    
     
     return df
 
@@ -59,7 +70,7 @@ if __name__ == "__main__":
 
     # Read raw data
     try:
-        db_engine= read_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='bronze')
+        db_engine= read_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='retaildwh')
         print("Connection done successfully...")
     except Exception as e:
         print("Got ERROR in Connection to DB for Reading", e)
@@ -71,6 +82,7 @@ if __name__ == "__main__":
         '''
         raw_data = pd.read_sql(query, db_engine, index_col='Id')
         print("The Raw Data Loaded Successfully")
+        
     except Exception as e:
         print("Got ERROR in your query or index", e)
     
@@ -78,6 +90,9 @@ if __name__ == "__main__":
     # Start Cleaning 
     try:
         cleanedDF= data_cleanings(raw_data)
+        
+        print(cleanedDF.head(5))
+        print(cleanedDF.dtypes)
         print("Cleaning Done...")
     except Exception as e:
         print("Got ERROR in Data Cleaning part...", e)
@@ -85,7 +100,7 @@ if __name__ == "__main__":
       
     # Stage the Denormalized Cleaned Data
     try:
-        engine= write_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='silver')
+        engine= write_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='retaildwh')
         print("The connection for Writing Done Successfully...")
     except Exception as e:
         print("Got ERROR in Connection For Writing...",e)
@@ -95,6 +110,7 @@ if __name__ == "__main__":
         cleanedDF.head(n=0).to_sql(name='retail_cleaned', con=engine, if_exists='replace', index=True, index_label='Id')
         print("Creation Done, Start Loading data in it...")
         cleanedDF.to_sql(name='retail_cleaned', con=engine, if_exists='append', index=True, index_label='Id')
+        
         print('Finished (:')
     except Exception as e:
         print("Got ERROR in Staging the Cleaned Data.", e)
