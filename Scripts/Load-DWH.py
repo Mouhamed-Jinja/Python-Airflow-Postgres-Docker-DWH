@@ -24,29 +24,38 @@ def write_connection(user, password, host, port,db):
     return engine
 
 def Dimcustomer(cleaned_df, db_conn):
-    DimCust = cleaned_df[['CustomerID', 'Country']].copy()
+    DimCust = cleaned_df[['customerid', 'country']].copy()
     DimCust.columns= DimCust.columns.str.lower()
     DimCust['name'] = 'Customer' + DimCust['customerid'].astype(str)
     DimCust= DimCust.reset_index(drop=True)
     DimCust= DimCust.drop_duplicates('customerid').set_index('customerid')
+    DimCust['processed_date']= date.today()
+
     #DimCust.head(n=0).to_sql(name='dimcustomer', con=db_conn, if_exists='replace', index=True, index_label='CustomerID')
     DimCust.to_sql(name='dimcustomer', con=db_conn, if_exists='append', index=True, index_label='customerid')
 
 
 def DimProduct(cleanedDF, db_conn):
-    dimpro= cleanedDF[['stockcode', 'description']]\
+    dimpro = cleanedDF[['stockcode', 'description']]\
         .drop_duplicates(subset=['stockcode', 'description'])\
         .reset_index(drop=True)
-        
-    dimpro['productid']= range(1000, dimpro['stockcode'].count()+1000, 1)
-    dimpro['name']= 'Product-'+dimpro['stockcode']
-    dimpro= dimpro.set_index('stockcode')
-    dimpro['processed_date']= date.today()
-    print(dimpro.head())
-    dimpro= dimpro.reindex(columns=['productid','name' , 'stockcode' ,'description','processed_date'])
-    #dimpro.head(n=0).to_sql(name= 'dimproduct', if_exists= 'replace',con= db_conn, index=True, index_label='StockCode')
-    dimpro.to_sql(name= 'dimproduct', if_exists= 'append',con= db_conn, index=True, index_label='stockcode')
+
+    # Generate 'productid' values as a range starting from start_productid
+    start_productid=1
+    dimpro['productid'] = range(start_productid, start_productid + len(dimpro))
+
+    dimpro['name'] = 'Product-' + dimpro['stockcode']
+    dimpro['processed_date'] = date.today()
+    dimpro = dimpro.reindex(columns=['productid', 'name', 'stockcode', 'description', 'processed_date'])
+
+    # Ensure 'productid' is set as the index
+    dimpro.set_index('stockcode', inplace=True)
+
+    # Add the DataFrame to the 'dimproduct' table
+    dimpro.to_sql(name='dimproduct', if_exists='append', con=db_conn, index=True, index_label='stockcode')
+
     return dimpro
+
 
 
 
@@ -71,7 +80,11 @@ def DimDate(cleanedDF, db_conn):
 
 def FactTable(cleaned_data, DimProduct, db_conn):
     cleaned_data.columns= cleaned_data.columns.str.lower()
-    fact =cleaned_data.merge(DimProduct, on=['stockcode','description']).copy()
+    try:
+        fact =cleaned_data.merge(DimProduct, on=['stockcode','description']).copy()
+    except Exception as e:
+        print("print error in ",e)
+    fact['saleskey']= range(0, len(fact),1)
     fact.columns= fact.columns.str.lower()
     fact= fact[['saleskey','invoiceno','invoicedate','customerid', 'productid','unitprice','quantity']]\
         .rename(columns={
@@ -82,7 +95,7 @@ def FactTable(cleaned_data, DimProduct, db_conn):
     print(fact.head())
 
     #fact.head(n=0).to_sql(name='fact', con= db_conn,if_exists='replace', index=True, index_label='InvoiceNo')
-    fact.to_sql(name='fact_sales', con= db_conn, if_exists='append', index=True, index_label='saleskey')
+    #fact.to_sql(name='fact_sales', con= db_conn, if_exists='append', index=True, index_label='saleskey')
 
 if __name__ == "__main__":
 

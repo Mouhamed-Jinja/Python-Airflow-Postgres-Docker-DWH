@@ -45,15 +45,12 @@ def data_cleanings(raw_data):
     
 
     # Update datatypes
+    df['StockCode']= df['StockCode'].astype(str)
     df['InvoiceDate']= pd.to_datetime( df['InvoiceDate'])
     df['CustomerID']= df['CustomerID'].astype(int)
-    df['Year']= df['InvoiceDate'].dt.strftime('%Y')
-    df['MonthNo']= df['InvoiceDate'].dt.strftime('%m')
-    df['Day']= df['InvoiceDate'].dt.strftime('%d')
-    df['saleskey'] = df['CustomerID'].astype(str) + df['StockCode'].astype(str) + df['Year']+df['MonthNo']+df['Day']
-    df= df.drop(columns= ['MonthNo', 'Year', 'Day'])
+    df['InvoiceNo']= df['InvoiceNo'].astype(str)
+
     df.columns = df.columns.str.lower()
-    print(df[['saleskey']].head())
     
     
     return df

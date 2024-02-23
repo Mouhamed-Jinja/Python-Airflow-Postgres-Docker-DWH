@@ -5,7 +5,8 @@ sql_statements = [
     CREATE TABLE dimcustomer (
         CustomerID BIGINT PRIMARY KEY,
         Country TEXT,
-        name TEXT
+        name TEXT,
+        processed_date DATE
     )
     """,
     """
@@ -34,7 +35,7 @@ sql_statements = [
     """
     -- Create fact_table table
     CREATE TABLE fact_sales(
-        saleskey TEXT,
+        saleskey BIGINT PRIMARY KEY,
         InvoiceNo TEXT,
         DateKey TIMESTAMP,
         CustomerKey BIGINT,
