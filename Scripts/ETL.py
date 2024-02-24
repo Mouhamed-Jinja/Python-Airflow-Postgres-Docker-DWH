@@ -1,6 +1,6 @@
 import pandas as pd
 from sqlalchemy import create_engine, text
-
+import Data_quality_checks
 def database_engine(user, password, host, port, db):
     engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
     connection = engine.connect()
@@ -20,8 +20,11 @@ def Load_DimProduct(engine_conn):
     dimproduct_latest['name']= 'Product-'+dimproduct_latest['stockcode']
     dimproduct_latest['processed_date']= pd.to_datetime(dimproduct_latest['processed_date'])
     dimproduct_latest= dimproduct_latest.reindex(columns=['productid', 'name', 'stockcode', 'description', 'processed_date'])
-    dimproduct_latest= dimproduct_latest.set_index('productid')
     
+    #check data quality before writing it.
+    Data_quality_checks.DIM_Product_DQ(new_data=dimproduct_latest, dim='dimproduct',engine=connection)
+
+    dimproduct_latest= dimproduct_latest.set_index('productid')
     try:
         dimproduct_latest.to_sql(name='dimproduct', con=engine_conn, if_exists='replace', index=True, index_label='productid')
         engine_conn.commit()
@@ -46,8 +49,11 @@ def Load_DimCustomer(engine_conn):
     latest_customers = pd.DataFrame(result)
     latest_customers['name'] = 'Customer' + latest_customers['customerid'].astype(str)
     latest_customers = latest_customers.reindex(columns=['customerid', 'country', 'name', 'processed_date'])
-    latest_customers = latest_customers.set_index('customerid')
     
+    # check data quality before writing it.
+    Data_quality_checks.DIM_Product_DQ(new_data=latest_customers, dim='dimcustomer',engine=connection)
+
+    latest_customers = latest_customers.set_index('customerid')
     try:
         latest_customers.to_sql(name='dimcustomer', con=engine_conn, if_exists='replace', index=True, index_label='customerid')
         engine_conn.commit()
@@ -85,6 +91,10 @@ def Load_DimDate(engine_conn):
         Dimdate['Day'] = Dimdate['InvoiceDate'].dt.strftime('%d')
         Dimdate['quarter'] = Dimdate['InvoiceDate'].dt.quarter
         Dimdate.columns = Dimdate.columns.str.lower()
+        
+        # check data quality before writing it.
+        Data_quality_checks.DIM_Product_DQ(new_data=Dimdate, dim='dimdate',engine=connection)
+
         Dimdate = Dimdate.reset_index(drop=True).set_index('datekey')
         try:
             Dimdate.to_sql(name='dimdate', con=engine_conn, if_exists='append', index=True, index_label='datekey')
@@ -107,8 +117,11 @@ def Fact_Sales(engine_conn):
         
     max_saleskey_id = max_saleskey_df['max_date'].iloc[0] +1
     factDF['saleskey']= range(max_saleskey_id, len(factDF)+max_saleskey_id, 1)
-    factDF= factDF.set_index('saleskey')
     
+    # check data quality before writing it.
+    Data_quality_checks.DIM_Product_DQ(new_data=factDF, dim='fact_sales',engine=connection)
+
+    factDF= factDF.set_index('saleskey')
     try:
         factDF.to_sql(name='fact_sales', con= engine_conn, if_exists='append', index=True, index_label='saleskey') 
     except Exception as e:
