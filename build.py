@@ -62,4 +62,5 @@ def constraints_metadata(db_user, db_pass, db_host, db_port, db_name, scripts:li
     cursor = conn.cursor()
     for constraint in sql_statements:
         cursor.execute(constraint)
-constraints_metadata('postgres', 'postgres', 'localhost',5432,'retaildwh')
+    
+constraints_metadata('postgres', 'postgres', 'localhost',5432,'test')
