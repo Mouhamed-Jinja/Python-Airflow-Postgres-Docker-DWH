@@ -1,20 +1,10 @@
 import pandas as pd
-import psycopg2
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
-def read_connection(user, password, host, port,db):
-    engine= psycopg2.connect(
-         user= user,
-         password= password,
-         host= host,
-         port=port,
-         database= db
-    )
-    return engine
-
-def execute_query(query, engine, index_col):
-    df = pd.read_sql(query, engine, index_col=index_col)
-    return df
+def db_engine(user, password, host, port, db):
+    engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
+    connection = engine.connect()
+    return engine, connection
 
 def data_cleanings(raw_data):
     # Exclude nulls
@@ -55,29 +45,20 @@ def data_cleanings(raw_data):
     
     return df
 
-def write_connection(user, password, host, port,db):
-    engine= create_engine(
-            f'postgresql://{user}:{password}@{host}:{port}/{db}'
-        )
-    engine.connect()
-    return engine   
-
-
 if __name__ == "__main__":
 
     # Read raw data
     try:
-        db_engine= read_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='retaildwh')
-        print("Connection done successfully...")
+        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'retaildwh')
     except Exception as e:
-        print("Got ERROR in Connection to DB for Reading", e)
+        print("Got ERROR in connection to DB:", e)
     
     try:    
         query = '''
             SELECT * 
             FROM raw_data
         '''
-        raw_data = pd.read_sql(query, db_engine, index_col='Id')
+        raw_data = pd.read_sql(text(query), connection, index_col='Id')
         print("The Raw Data Loaded Successfully")
         
     except Exception as e:
@@ -95,19 +76,13 @@ if __name__ == "__main__":
         print("Got ERROR in Data Cleaning part...", e)
     
       
-    # Stage the Denormalized Cleaned Data
-    try:
-        engine= write_connection(user='postgres', password='postgres', host='localhost', port=5432 ,db='retaildwh')
-        print("The connection for Writing Done Successfully...")
-    except Exception as e:
-        print("Got ERROR in Connection For Writing...",e)
-        
+    # Stage the Denormalized Cleaned Data        
     try:
         print("Start Creating the Table: retail_cleaned")
-        cleanedDF.head(n=0).to_sql(name='retail_cleaned', con=engine, if_exists='replace', index=True, index_label='Id')
         print("Creation Done, Start Loading data in it...")
-        cleanedDF.to_sql(name='retail_cleaned', con=engine, if_exists='append', index=True, index_label='Id')
-        
+        cleanedDF.to_sql(name='retail_cleaned', con=connection, if_exists='replace', index=True, index_label='Id')
+        connection.commit()
+        print(cleanedDF)
         print('Finished (:')
     except Exception as e:
         print("Got ERROR in Staging the Cleaned Data.", e)

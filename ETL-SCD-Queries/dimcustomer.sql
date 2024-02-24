@@ -13,4 +13,3 @@ FROM (
     ) AS combined
 ) AS nt
 WHERE rn = 1
-

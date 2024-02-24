@@ -16,4 +16,4 @@ FROM (
         FROM dimproduct
     ) AS combined
 ) AS rn
-WHERE row_num = 1
+WHERE row_num = 1;

@@ -1,27 +1,11 @@
 import pandas as pd
-import psycopg2
-from sqlalchemy import create_engine
-import metadata
+from sqlalchemy import create_engine, text
 from datetime import date
 
-
-def read_connection(db_password, db_user, db_host, db_port, db_name):
-    engine= psycopg2.connect(
-        user= db_user,
-        password= db_password,
-        host= db_host,
-        port= db_port,
-        database= db_name
-        
-    )
-    return engine
-
-def write_connection(user, password, host, port,db):
-    engine= create_engine(
-         f'postgresql://{user}:{password}@{host}:{port}/{db}'
-    )
-    engine.connect()
-    return engine
+def db_engine(user, password, host, port, db):
+    engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
+    connection = engine.connect()
+    return engine, connection
 
 def Dimcustomer(cleaned_df, db_conn):
     DimCust = cleaned_df[['customerid', 'country']].copy()
@@ -101,7 +85,7 @@ if __name__ == "__main__":
 
     # Read Cleaned Data to Start Modeling the Star Schema...
     try:
-        db_engine= read_connection(db_password='postgres',db_user='postgres', db_host='localhost',db_port=5432, db_name='retaildwh')
+        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'retaildwh')
         print("Connection done successfully for reading...")
     except Exception as e:
         print("Got ERROR in Connection to DB for Reading", e)
@@ -111,18 +95,12 @@ if __name__ == "__main__":
             SELECT * 
             FROM retail_cleaned
         '''
-        cleaned_data = pd.read_sql(query, db_engine, index_col='Id')
+        cleaned_data = pd.read_sql(text(query), connection, index_col='Id')
         print("The Cleaned Data Loaded Successfully")
     except Exception as e:
         print("Got ERROR in your query or index", e)
         
-    try:
-        print("Test Connection for writing the Dimantions.")
-        db_connection =write_connection('postgres', 'postgres','localhost', 5432,'retaildwh')
-        print("Connection Done (: ")
-    except Exception as e:
-        print("Got ERROR in Connection for Writing...", e)
-        
+ 
     # #Drop any constraints befor updates:
     # try:
     #     metadata.constraints_metadata('postgres', 'postgres', 'localhost', 5432, "gold", scripts=metadata.drop_constraints)
@@ -135,14 +113,14 @@ if __name__ == "__main__":
     
     # #DimCustomer:-
     # try:
-    #     Dimcustomer(cleaned_data,db_connection)
+    #     Dimcustomer(cleaned_data,connection)
     #     print("DimCustomer has been written.")
     # except Exception as e:
     #     print("Got ERROR in Customer Dimantion", e)
         
     #DimProduct:-
     try:
-        dimproduct= DimProduct(cleaned_data,db_connection)
+        dimproduct= DimProduct(cleaned_data,connection)
         print("DimProduct has been written.")
     except Exception as e:
         print("Got ERROR in Product Dimantion", e)
@@ -150,14 +128,14 @@ if __name__ == "__main__":
         
     # #DimDate:-
     # try:
-    #     DimDate(cleaned_data,db_connection)
+    #     DimDate(cleaned_data,connection)
     #     print("DimDate has been written.")
     # except Exception as e:
     #     print("Got ERROR in Date Dimantion", e)
         
     # #Fact Table:-
     # try:
-    #     FactTable(cleaned_data, dimproduct, db_connection)
+    #     FactTable(cleaned_data, dimproduct, connection)
     #     print("FactTable has been written.")
     # except Exception as e:
     #     print("Got ERROR in FactTable", e)
