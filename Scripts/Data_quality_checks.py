@@ -1,17 +1,21 @@
 import pandas as pd
 from sqlalchemy import text  # Importing text function from sqlalchemy
 
-def DIM_Product_DQ(new_data, dim, engine):
+def dim_data_quality_check(new_data, dim, engine):
     new_info = pd.DataFrame({
         'new_columns': new_data.columns,
         'new_datatypes': new_data.dtypes
     })
+    print(f"-----------{dim}------------")
+
+    new_info= new_info.sort_values(['new_columns', 'new_datatypes'])
     
     old_data = pd.read_sql(text(f'select * from {dim} limit 1;'), con=engine)
     old_info = pd.DataFrame({
         'old_columns': old_data.columns,
         'old_datatypes': old_data.dtypes
     })
+    old_info= old_info.sort_values(['old_columns', 'old_datatypes'])
 
     merged_info = pd.merge(new_info, old_info, left_index=True, right_index=True)
 

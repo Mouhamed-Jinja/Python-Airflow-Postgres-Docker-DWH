@@ -22,8 +22,10 @@ def Load_DimProduct(engine_conn):
     dimproduct_latest= dimproduct_latest.reindex(columns=['productid', 'name', 'stockcode', 'description', 'processed_date'])
     
     #check data quality before writing it.
-    Data_quality_checks.DIM_Product_DQ(new_data=dimproduct_latest, dim='dimproduct',engine=connection)
-
+    try:
+        Data_quality_checks.dim_data_quality_check(new_data=dimproduct_latest, dim='dimproduct',engine=connection)
+    except Exception as e:
+        print(e)
     dimproduct_latest= dimproduct_latest.set_index('productid')
     try:
         dimproduct_latest.to_sql(name='dimproduct', con=engine_conn, if_exists='replace', index=True, index_label='productid')
@@ -51,7 +53,7 @@ def Load_DimCustomer(engine_conn):
     latest_customers = latest_customers.reindex(columns=['customerid', 'country', 'name', 'processed_date'])
     
     # check data quality before writing it.
-    Data_quality_checks.DIM_Product_DQ(new_data=latest_customers, dim='dimcustomer',engine=connection)
+    Data_quality_checks.dim_data_quality_check(new_data=latest_customers, dim='dimcustomer',engine=connection)
 
     latest_customers = latest_customers.set_index('customerid')
     try:
@@ -93,7 +95,7 @@ def Load_DimDate(engine_conn):
         Dimdate.columns = Dimdate.columns.str.lower()
         
         # check data quality before writing it.
-        Data_quality_checks.DIM_Product_DQ(new_data=Dimdate, dim='dimdate',engine=connection)
+        Data_quality_checks.dim_data_quality_check(new_data=Dimdate, dim='dimdate',engine=connection)
 
         Dimdate = Dimdate.reset_index(drop=True).set_index('datekey')
         try:
@@ -119,7 +121,7 @@ def Fact_Sales(engine_conn):
     factDF['saleskey']= range(max_saleskey_id, len(factDF)+max_saleskey_id, 1)
     
     # check data quality before writing it.
-    Data_quality_checks.DIM_Product_DQ(new_data=factDF, dim='fact_sales',engine=connection)
+    Data_quality_checks.dim_data_quality_check(new_data=factDF, dim='fact_sales',engine=connection)
 
     factDF= factDF.set_index('saleskey')
     try:
