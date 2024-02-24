@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     # Read raw data
     try:
-        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'retaildwh')
+        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'test')
     except Exception as e:
         print("Got ERROR in connection to DB:", e)
     

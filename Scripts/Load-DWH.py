@@ -17,7 +17,7 @@ def Dimcustomer(cleaned_df, db_conn):
 
     #DimCust.head(n=0).to_sql(name='dimcustomer', con=db_conn, if_exists='replace', index=True, index_label='CustomerID')
     DimCust.to_sql(name='dimcustomer', con=db_conn, if_exists='append', index=True, index_label='customerid')
-
+    db_conn.commit()
 
 def DimProduct(cleanedDF, db_conn):
     dimpro = cleanedDF[['stockcode', 'description']]\
@@ -37,19 +37,18 @@ def DimProduct(cleanedDF, db_conn):
 
     # Add the DataFrame to the 'dimproduct' table
     dimpro.to_sql(name='dimproduct', if_exists='append', con=db_conn, index=True, index_label='stockcode')
-
+    db_conn.commit()
     return dimpro
 
 
 
 
 def DimDate(cleanedDF, db_conn):
-    cleanedDF['InvoiceDate']= pd.to_datetime(cleanedDF['InvoiceDate'])
-    maxdate= cleanedDF['InvoiceDate'].max()
-    mindate= cleanedDF['InvoiceDate'].min()
+    cleanedDF['invoicedate']= pd.to_datetime(cleanedDF['invoicedate'])
+    maxdate= cleanedDF['invoicedate'].max()
+    mindate= cleanedDF['invoicedate'].min()
     Dimdate = pd.DataFrame({'InvoiceDate': pd.date_range(start=mindate, end=maxdate, freq='D')})
-    Dimdate['DateKey'] = Dimdate['InvoiceDate']
-    Dimdate['Date'] = Dimdate['InvoiceDate'].dt.strftime('%Y-%m-%d')
+    Dimdate['DateKey'] = Dimdate['InvoiceDate'].dt.strftime('%Y-%m-%d')
     Dimdate['Year']= Dimdate['InvoiceDate'].dt.strftime('%Y')
     Dimdate['MonthNo']= Dimdate['InvoiceDate'].dt.strftime('%m')
     Dimdate['MonthName']= Dimdate['InvoiceDate'].dt.strftime('%B')
@@ -57,10 +56,10 @@ def DimDate(cleanedDF, db_conn):
     Dimdate['quarter']= Dimdate['InvoiceDate'].dt.quarter
     Dimdate.columns= Dimdate.columns.str.lower()
     Dimdate= Dimdate.reset_index(drop=True).set_index('datekey')
-    
+    print(Dimdate.head())
     #Dimdate.head(n=0).to_sql(name= 'dimdate', con= db_conn, if_exists= 'replace',index=True, index_label='DateKey')
-    Dimdate.to_sql(name= 'dimdate', con= db_conn, if_exists= 'append',index=True, index_label='datekey')
-
+    Dimdate.to_sql(name= 'dimdate', con= db_conn, if_exists= 'replace',index=True, index_label='datekey')
+    db_conn.commit()
 
 def FactTable(cleaned_data, DimProduct, db_conn):
     cleaned_data.columns= cleaned_data.columns.str.lower()
@@ -68,24 +67,24 @@ def FactTable(cleaned_data, DimProduct, db_conn):
         fact =cleaned_data.merge(DimProduct, on=['stockcode','description']).copy()
     except Exception as e:
         print("print error in ",e)
-    fact['saleskey']= range(0, len(fact),1)
+    fact['saleskey']= range(1, len(fact)+1,1)
+    fact['DateKey'] = fact['invoicedate'].dt.strftime('%Y-%m-%d')
     fact.columns= fact.columns.str.lower()
-    fact= fact[['saleskey','invoiceno','invoicedate','customerid', 'productid','unitprice','quantity']]\
+    fact= fact[['saleskey','invoiceno', 'datekey', 'invoicedate', 'customerid', 'productid','unitprice','quantity']]\
         .rename(columns={
-            'invoicedate':'datekey',
             'customerid':'customerkey',
             'productid': 'productkey'})\
         .set_index('saleskey')
     print(fact.head())
 
     #fact.head(n=0).to_sql(name='fact', con= db_conn,if_exists='replace', index=True, index_label='InvoiceNo')
-    #fact.to_sql(name='fact_sales', con= db_conn, if_exists='append', index=True, index_label='saleskey')
-
+    fact.to_sql(name='fact_sales', con= db_conn, if_exists='append', index=True, index_label='saleskey')
+    db_conn.commit()
 if __name__ == "__main__":
 
     # Read Cleaned Data to Start Modeling the Star Schema...
     try:
-        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'retaildwh')
+        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'test')
         print("Connection done successfully for reading...")
     except Exception as e:
         print("Got ERROR in Connection to DB for Reading", e)
@@ -111,7 +110,7 @@ if __name__ == "__main__":
     # Calling the Dimantions and write it.
     print("---> Start Writing the Dimantions...")
     
-    # #DimCustomer:-
+    #DimCustomer:-
     # try:
     #     Dimcustomer(cleaned_data,connection)
     #     print("DimCustomer has been written.")
@@ -126,19 +125,19 @@ if __name__ == "__main__":
         print("Got ERROR in Product Dimantion", e)
         
         
-    # #DimDate:-
+    #DimDate:-
     # try:
     #     DimDate(cleaned_data,connection)
     #     print("DimDate has been written.")
     # except Exception as e:
     #     print("Got ERROR in Date Dimantion", e)
         
-    # #Fact Table:-
-    # try:
-    #     FactTable(cleaned_data, dimproduct, connection)
-    #     print("FactTable has been written.")
-    # except Exception as e:
-    #     print("Got ERROR in FactTable", e)
+    #Fact Table:-
+    try:
+        FactTable(cleaned_data, dimproduct, connection)
+        print("FactTable has been written.")
+    except Exception as e:
+        print("Got ERROR in FactTable", e)
         
     # # try:
     # #     metadata.constraints_metadata('postgres', 'postgres', 'localhost', 5432, "gold")

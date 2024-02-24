@@ -1,17 +1,18 @@
 import psycopg2
 sql_statements = [
+    
     """
     -- Create dimcustomer table
-    CREATE TABLE dimcustomer (
+    CREATE TABLE IF NOT EXISTS dimcustomer (
         CustomerID BIGINT PRIMARY KEY,
         Country TEXT,
         name TEXT,
-        processed_date DATE
+        processed_date TIMESTAMP
     )
     """,
     """
     -- Create dimdate table
-    CREATE TABLE dimdate (
+    CREATE TABLE IF NOT EXISTS dimdate (
         DateKey TIMESTAMP PRIMARY KEY,
         InvoiceDate TIMESTAMP,
         Date TEXT,
@@ -24,20 +25,21 @@ sql_statements = [
     """,
     """
     -- Create dimproduct table
-    CREATE TABLE dimproduct(
+    CREATE TABLE IF NOT EXISTS dimproduct(
         ProductID BIGINT PRIMARY KEY,
         name TEXT,
         StockCode TEXT,
         Description TEXT,
-        processed_date DATE
+        processed_date TIMESTAMP
     )
     """,
     """
     -- Create fact_table table
-    CREATE TABLE fact_sales(
+    CREATE TABLE IF NOT EXISTS fact_sales(
         saleskey BIGINT PRIMARY KEY,
         InvoiceNo TEXT,
-        DateKey TIMESTAMP,
+        datekey TIMESTAMP,
+        invoicedate TIMESTAMP,
         CustomerKey BIGINT,
         ProductKey BIGINT,
         UnitPrice DOUBLE PRECISION,
@@ -62,5 +64,6 @@ def constraints_metadata(db_user, db_pass, db_host, db_port, db_name, scripts:li
     cursor = conn.cursor()
     for constraint in sql_statements:
         cursor.execute(constraint)
+        print('created')
     
 constraints_metadata('postgres', 'postgres', 'localhost',5432,'test')

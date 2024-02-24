@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine, text
 import Data_quality_checks
+import metadata
 def database_engine(user, password, host, port, db):
     engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
     connection = engine.connect()
@@ -85,8 +86,7 @@ def Load_DimDate(engine_conn):
         end_range = new_max_date
         print(f" Start:{start_range}, End:{end_range}")
         Dimdate = pd.DataFrame({'InvoiceDate': pd.date_range(start=start_range, end=end_range, freq='D')})
-        Dimdate['DateKey'] = Dimdate['InvoiceDate']
-        Dimdate['Date'] = Dimdate['InvoiceDate'].dt.strftime('%Y-%m-%d')
+        Dimdate['DateKey'] = Dimdate['InvoiceDate'].dt.strftime('%Y-%m-%d')
         Dimdate['Year'] = Dimdate['InvoiceDate'].dt.strftime('%Y')
         Dimdate['MonthNo'] = Dimdate['InvoiceDate'].dt.strftime('%m')
         Dimdate['MonthName'] = Dimdate['InvoiceDate'].dt.strftime('%B')
@@ -120,21 +120,35 @@ def Fact_Sales(engine_conn):
     max_saleskey_id = max_saleskey_df['max_date'].iloc[0] +1
     factDF['saleskey']= range(max_saleskey_id, len(factDF)+max_saleskey_id, 1)
     
+    
+    new_order = ['saleskey', 'invoiceno', 'datekey', 'invoicedate', 'customerkey', 'productkey', 'unitprice', 'quantity']
+    factDF = factDF.reindex(columns=new_order)
+    print(factDF.head())
+    
     # check data quality before writing it.
     Data_quality_checks.dim_data_quality_check(new_data=factDF, dim='fact_sales',engine=connection)
-
+    
     factDF= factDF.set_index('saleskey')
     try:
         factDF.to_sql(name='fact_sales', con= engine_conn, if_exists='append', index=True, index_label='saleskey') 
+        engine_conn.commit()
     except Exception as e:
         print("Got ERROR in Fact Sales table:", e)
 
 if __name__== "__main__":
     try:
-        engine, connection = database_engine('postgres', 'postgres', 'localhost', 5432, 'retaildwh')
+        engine, connection = database_engine('postgres', 'postgres', 'localhost', 5432, 'test')
     except Exception as e:
         print("Got ERROR in connection to DB:", e)
     
+    try:
+        for constraints in metadata.drop_constraints:
+            connection.execute(text(constraints))
+            connection.commit()
+        print("Constraints dropped.")
+    except Exception as e:
+        print("Got Error while dropping the constraints")
+        
     try:
         Load_DimProduct(engine_conn= connection)
         print("DIM Product loaded successfully.")
@@ -160,5 +174,10 @@ if __name__== "__main__":
         print("Got ERROR in loading Fact Sales table",e)
     
     
-    
-    
+    try:
+        for constraints in metadata.create_constraints:
+            connection.execute(text(constraints))
+            connection.commit()
+        print("Constraints reseted.")
+    except Exception as e:
+        print("Got Error while reset the constraints")

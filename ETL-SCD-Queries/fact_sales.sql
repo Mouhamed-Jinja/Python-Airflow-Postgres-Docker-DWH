@@ -2,6 +2,7 @@
 --  saleskey invoiceno datekey  customerkey  productkey  unitprice  quantity
 SELECT r.invoiceno,
     r.invoicedate as datekey,
+    r.invoicedate,
     r.customerid as customerkey,
     p.productid as productkey,
     r.unitprice,
