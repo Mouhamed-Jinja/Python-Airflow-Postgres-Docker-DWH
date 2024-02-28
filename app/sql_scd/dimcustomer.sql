@@ -8,7 +8,7 @@ FROM (
         
         UNION ALL
         
-        SELECT customerid, country, CURRENT_DATE + INTERVAL '1 day' AS processed_date 
+        SELECT customerid, country, CURRENT_DATE as  processed_date 
         FROM retail_cleaned
     ) AS combined
 ) AS nt

@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     # Read Cleaned Data to Start Modeling the Star Schema...
     try:
-        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'test')
+        engine, connection = db_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
         print("Connection done successfully for reading...")
     except Exception as e:
         print("Got ERROR in Connection to DB for Reading", e)
@@ -111,11 +111,11 @@ if __name__ == "__main__":
     print("---> Start Writing the Dimantions...")
     
     #DimCustomer:-
-    # try:
-    #     Dimcustomer(cleaned_data,connection)
-    #     print("DimCustomer has been written.")
-    # except Exception as e:
-    #     print("Got ERROR in Customer Dimantion", e)
+    try:
+        Dimcustomer(cleaned_data,connection)
+        print("DimCustomer has been written.")
+    except Exception as e:
+        print("Got ERROR in Customer Dimantion", e)
         
     #DimProduct:-
     try:
@@ -126,11 +126,11 @@ if __name__ == "__main__":
         
         
     #DimDate:-
-    # try:
-    #     DimDate(cleaned_data,connection)
-    #     print("DimDate has been written.")
-    # except Exception as e:
-    #     print("Got ERROR in Date Dimantion", e)
+    try:
+        DimDate(cleaned_data,connection)
+        print("DimDate has been written.")
+    except Exception as e:
+        print("Got ERROR in Date Dimantion", e)
         
     #Fact Table:-
     try:

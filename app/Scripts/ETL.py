@@ -10,7 +10,7 @@ def database_engine(user, password, host, port, db):
 
 def Load_DimProduct(engine_conn):
     try:
-        with open(r'C:\Users\Mohammed\Desktop\retail-DWH\ETL-SCD-Queries\dimproduct.sql') as file:
+        with open('/opt/airflow/spark/app/sql_scd/dimproduct.sql') as file:
             sql_query = file.read()
         results = engine_conn.execute(text(sql_query)).fetchall()
     except Exception as e:
@@ -37,7 +37,7 @@ def Load_DimProduct(engine_conn):
 
 def Load_DimCustomer(engine_conn):
     try:
-        with open(r'C:\Users\Mohammed\Desktop\retail-DWH\ETL-SCD-Queries\dimcustomer.sql') as file:
+        with open('/opt/airflow/spark/app/sql_scd/dimcustomer.sql') as file:
             query = file.read()
             
         result = engine_conn.execute(text(query)).fetchall()
@@ -109,7 +109,7 @@ def Load_DimDate(engine_conn):
 
 def Fact_Sales(engine_conn):
     try:
-        with open(r'C:\Users\Mohammed\Desktop\retail-DWH\ETL-SCD-Queries\fact_sales.sql') as file:
+        with open('/opt/airflow/spark/app/sql_scd/fact_sales.sql') as file:
             query= file.read()
         result= engine_conn.execute(text(query))
         factDF= pd.DataFrame(result)
@@ -137,7 +137,7 @@ def Fact_Sales(engine_conn):
 
 if __name__== "__main__":
     try:
-        engine, connection = database_engine('postgres', 'postgres', 'localhost', 5432, 'test')
+        engine, connection = database_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
     except Exception as e:
         print("Got ERROR in connection to DB:", e)
     
@@ -173,11 +173,3 @@ if __name__== "__main__":
     except Exception as e:
         print("Got ERROR in loading Fact Sales table",e)
     
-    
-    try:
-        for constraints in metadata.create_constraints:
-            connection.execute(text(constraints))
-            connection.commit()
-        print("Constraints reseted.")
-    except Exception as e:
-        print("Got Error while reset the constraints")

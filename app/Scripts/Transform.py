@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     # Read raw data
     try:
-        engine, connection = db_engine('postgres', 'postgres', 'localhost', 5432, 'test')
+        engine, connection = db_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
     except Exception as e:
         print("Got ERROR in connection to DB:", e)
     

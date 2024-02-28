@@ -43,10 +43,10 @@ sql_statements = [
         CustomerKey BIGINT,
         ProductKey BIGINT,
         UnitPrice DOUBLE PRECISION,
-        Quantity BIGINT,
-        FOREIGN KEY (DateKey) REFERENCES dimdate (DateKey) ON DELETE CASCADE ON UPDATE CASCADE,
-        FOREIGN KEY (CustomerKey) REFERENCES dimcustomer (CustomerID) ON DELETE CASCADE ON UPDATE CASCADE,
-        FOREIGN KEY (ProductKey) REFERENCES dimproduct (ProductID) ON DELETE CASCADE ON UPDATE CASCADE
+        Quantity BIGINT
+        --FOREIGN KEY (DateKey) REFERENCES dimdate (DateKey) ON DELETE CASCADE ON UPDATE CASCADE,
+        --FOREIGN KEY (CustomerKey) REFERENCES dimcustomer (CustomerID) ON DELETE CASCADE ON UPDATE CASCADE,
+        --FOREIGN KEY (ProductKey) REFERENCES dimproduct (ProductID) ON DELETE CASCADE ON UPDATE CASCADE
     )
     """
 ]
@@ -66,4 +66,4 @@ def constraints_metadata(db_user, db_pass, db_host, db_port, db_name, scripts:li
         cursor.execute(constraint)
         print('created')
     
-constraints_metadata('postgres', 'postgres', 'localhost',5432,'test')
+constraints_metadata('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
