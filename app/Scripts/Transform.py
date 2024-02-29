@@ -3,8 +3,7 @@ from sqlalchemy import create_engine, text
 
 def db_engine(user, password, host, port, db):
     engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
-    connection = engine.connect()
-    return engine, connection
+    return engine
 
 def data_cleanings(raw_data):
     # Exclude nulls
@@ -31,9 +30,6 @@ def data_cleanings(raw_data):
     max_outlier= IQR*1.5+Q3  #not used
     df.loc[df['UnitPrice'] >750, 'UnitPrice']= 750
     
-    
-    
-
     # Update datatypes
     df['StockCode']= df['StockCode'].astype(str)
     df['InvoiceDate']= pd.to_datetime( df['InvoiceDate'])
@@ -43,14 +39,13 @@ def data_cleanings(raw_data):
 
     df.columns = df.columns.str.lower()
     
-    
     return df
 
 if __name__ == "__main__":
 
     # Read raw data
     try:
-        engine, connection = db_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
+        engine = db_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
     except Exception as e:
         print("Got ERROR in connection to DB:", e)
     
@@ -59,7 +54,7 @@ if __name__ == "__main__":
             SELECT * 
             FROM raw_data
         '''
-        raw_data = pd.read_sql(text(query), connection, index_col='Id')
+        raw_data = pd.read_sql(text(query), engine, index_col='Id')
         print("The Raw Data Loaded Successfully")
         
     except Exception as e:
@@ -81,12 +76,8 @@ if __name__ == "__main__":
     try:
         print("Start Creating the Table: retail_cleaned")
         print("Creation Done, Start Loading data in it...")
-        cleanedDF.to_sql(name='retail_cleaned', con=connection, if_exists='replace', index=True, index_label='Id')
-        connection.commit()
+        cleanedDF.to_sql(name='retail_cleaned', con=engine, if_exists='replace', index=True, index_label='Id')
         print(cleanedDF)
         print('Finished (:')
     except Exception as e:
         print("Got ERROR in Staging the Cleaned Data.", e)
-    
-        
-    

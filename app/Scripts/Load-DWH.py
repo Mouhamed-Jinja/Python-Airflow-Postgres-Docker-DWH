@@ -4,8 +4,7 @@ from datetime import date
 
 def db_engine(user, password, host, port, db):
     engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
-    connection = engine.connect()
-    return engine, connection
+    return engine
 
 def Dimcustomer(cleaned_df, db_conn):
     DimCust = cleaned_df[['customerid', 'country']].copy()
@@ -17,7 +16,7 @@ def Dimcustomer(cleaned_df, db_conn):
 
     #DimCust.head(n=0).to_sql(name='dimcustomer', con=db_conn, if_exists='replace', index=True, index_label='CustomerID')
     DimCust.to_sql(name='dimcustomer', con=db_conn, if_exists='append', index=True, index_label='customerid')
-    db_conn.commit()
+   
 
 def DimProduct(cleanedDF, db_conn):
     dimpro = cleanedDF[['stockcode', 'description']]\
@@ -37,7 +36,6 @@ def DimProduct(cleanedDF, db_conn):
 
     # Add the DataFrame to the 'dimproduct' table
     dimpro.to_sql(name='dimproduct', if_exists='append', con=db_conn, index=True, index_label='stockcode')
-    db_conn.commit()
     return dimpro
 
 
@@ -59,7 +57,6 @@ def DimDate(cleanedDF, db_conn):
     print(Dimdate.head())
     #Dimdate.head(n=0).to_sql(name= 'dimdate', con= db_conn, if_exists= 'replace',index=True, index_label='DateKey')
     Dimdate.to_sql(name= 'dimdate', con= db_conn, if_exists= 'replace',index=True, index_label='datekey')
-    db_conn.commit()
 
 def FactTable(cleaned_data, DimProduct, db_conn):
     cleaned_data.columns= cleaned_data.columns.str.lower()
@@ -79,12 +76,12 @@ def FactTable(cleaned_data, DimProduct, db_conn):
 
     #fact.head(n=0).to_sql(name='fact', con= db_conn,if_exists='replace', index=True, index_label='InvoiceNo')
     fact.to_sql(name='fact_sales', con= db_conn, if_exists='append', index=True, index_label='saleskey')
-    db_conn.commit()
+
 if __name__ == "__main__":
 
     # Read Cleaned Data to Start Modeling the Star Schema...
     try:
-        engine, connection = db_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
+        connection= db_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
         print("Connection done successfully for reading...")
     except Exception as e:
         print("Got ERROR in Connection to DB for Reading", e)

@@ -4,8 +4,7 @@ import Data_quality_checks
 import metadata
 def database_engine(user, password, host, port, db):
     engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{db}')
-    connection = engine.connect()
-    return engine, connection
+    return engine
 
 
 def Load_DimProduct(engine_conn):
@@ -30,7 +29,6 @@ def Load_DimProduct(engine_conn):
     dimproduct_latest= dimproduct_latest.set_index('productid')
     try:
         dimproduct_latest.to_sql(name='dimproduct', con=engine_conn, if_exists='replace', index=True, index_label='productid')
-        engine_conn.commit()
     except Exception as e:
         print("Got ERROR in Product Dimantion: While writing the DF:", e)
  
@@ -59,7 +57,6 @@ def Load_DimCustomer(engine_conn):
     latest_customers = latest_customers.set_index('customerid')
     try:
         latest_customers.to_sql(name='dimcustomer', con=engine_conn, if_exists='replace', index=True, index_label='customerid')
-        engine_conn.commit()
     except Exception as e:
         print("Error writing DataFrame to dimcustomer table:", e)
 
@@ -100,7 +97,6 @@ def Load_DimDate(engine_conn):
         Dimdate = Dimdate.reset_index(drop=True).set_index('datekey')
         try:
             Dimdate.to_sql(name='dimdate', con=engine_conn, if_exists='append', index=True, index_label='datekey')
-            engine_conn.commit()
         except Exception as e:
             print("Got ERROR in Date Dimantion, While Writing the DF",e)
      
@@ -131,13 +127,13 @@ def Fact_Sales(engine_conn):
     factDF= factDF.set_index('saleskey')
     try:
         factDF.to_sql(name='fact_sales', con= engine_conn, if_exists='append', index=True, index_label='saleskey') 
-        engine_conn.commit()
+       
     except Exception as e:
         print("Got ERROR in Fact Sales table:", e)
 
 if __name__== "__main__":
     try:
-        engine, connection = database_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
+        connection = database_engine('airflow', 'airflow', 'postgres', 5432, 'retaildwh')
     except Exception as e:
         print("Got ERROR in connection to DB:", e)
     

@@ -9,7 +9,7 @@ def db_connection(user, password, host, port,db):
     return engine
 
 def Data_Stage_PG(engine):
-    df_iter = pd.read_csv('/opt/airflow/spark/resources/online_retail_1.csv', iterator=True, chunksize=100000)
+    df_iter = pd.read_csv('/opt/airflow/resources/online_retail_1.csv', iterator=True, chunksize=100000)
     df= next(df_iter)
     df.head(n=0).to_sql(name='raw_data', con=engine, if_exists='replace', index=True, index_label='Id')
     try:
