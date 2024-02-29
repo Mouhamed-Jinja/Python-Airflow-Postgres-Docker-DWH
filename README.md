@@ -1,40 +1,82 @@
-![python-pipeline](https://github.com/Mouhamed-Jinja/Python-Data-Pipeline-PG-DWH/assets/132110499/9caee518-0fbe-4cb8-a0c3-b41535f6af12)
+---
+# Architecture:
 
-## Project Description
+![Architecture](https://github.com/Mouhamed-Jinja/Python-Airflow-Postgres-Docker-DWH/assets/132110499/8c7d80f9-9f77-4dea-ae93-effa87727afd)
 
-### Retail Data Warehouse (Retail-DWH)
+## Airflow ETL Workflow
 
-The Retail Data Warehouse (Retail-DWH) project is an end-to-end data pipeline for processing and analyzing retail data. It encompasses data extraction, transformation, loading (ETL), and storage in a data warehouse. The goal of the project is to provide a robust solution for handling large volumes of retail data, enabling businesses to gain insights and make data-driven decisions.
+This repository contains Airflow Directed Acyclic Graphs (DAGs) and associated scripts for orchestrating an Extract, Transform, Load (ETL) workflow. The workflow is designed to extract data from a source, perform transformations, and load it into a data warehouse.
 
-### Features:
+## Overview
 
-1. **Data Extraction**: Extracts retail data from CSV files using Python scripts.
-2. **Data Transformation**: Cleans and transforms the raw retail data to prepare it for analysis.
-3. **Data Loading**: Loads the transformed data into a PostgreSQL database, organized in a star schema format.
-4. **Dimensional Modeling**: Implements dimensional modeling techniques to organize data into dimensions and fact tables, facilitating efficient querying and analysis.
-5. **Dockerization**: Provides Docker Compose configuration for easy deployment of the PostgreSQL database.
+The ETL workflow consists of the following components:
 
-### Components:
+- **DAGs**: Airflow DAGs define the workflow's structure and task dependencies.
+- **Scripts**: Python scripts used by Airflow tasks for data extraction, transformation, and loading.
+- **SQL Scripts**: SQL scripts for database operations, such as creating tables or performing Slowly Changing Dimension (SCD) updates.
+## Data Pipeline:
 
-- **Extract.py**: Python script for extracting retail data from CSV files.
-- **Transform.py**: Python script for cleaning and transforming the raw data.
-- **Load-DWH.py**: Python script for loading transformed data into the data warehouse.
-- **Docker Compose File**: Defines a Docker Compose configuration for running the PostgreSQL database container.
+![data pipeline](https://github.com/Mouhamed-Jinja/Python-Airflow-Postgres-Docker-DWH/assets/132110499/883255ef-58cb-4a01-9273-cf315acfb4bb)
 
-### Technologies Used:
+## DAGs
 
-- Python
-- Pandas
-- SQLAlchemy
-- psycopg2
-- Docker
-- PostgreSQL
+### DAG_Build_v1.0
 
-### Usage:
+This DAG orchestrates the full ETL workflow, including building dimension tables and loading the data warehouse.
 
-1. Clone the repository.
-2. Customize configuration parameters (e.g., database connection details) as needed.
-3. Run the appropriate Python scripts (`Extract.py`, `Transform.py`, `Load-DWH.py`) to execute the data pipeline.
-4. Monitor the pipeline execution and check the data warehouse for the loaded data.
-5. Analyze the data using SQL queries or connect to visualization tools for further analysis.
+Tasks:
+- `Build_Dimantions`: Builds dimension tables using SQL scripts.
+- `Extract_v1`: Extracts data from the source system.
+- `Transform_v1`: Transforms extracted data using Python scripts.
+- `Load_v1`: Loads transformed data into the data warehouse.
+
+### DAG_ETL_v1.0
+
+This DAG focuses on the ETL process, excluding dimension table builds.
+
+Tasks:
+- `Extract_v1`: Extracts data from the source system.
+- `Transform_v1`: Transforms extracted data using Python scripts.
+- `Load_v1`: Loads transformed data into the data warehouse.
+
+## Scripts
+
+### build.py
+
+Python script for building dimension tables in the data warehouse.
+
+### Extract.py
+
+Python script for extracting data from the source system.
+
+### Transform.py
+
+Python script for transforming extracted data.
+
+### Load-DWH.py
+
+Python script for loading transformed data into the data warehouse.
+
+### SQL Scripts
+
+- `dimproduct.sql`: SQL script for Slowly Changing Dimension (SCD) operations on the product dimension.
+- `dimcustomer.sql`: SQL script for SCD operations on the customer dimension.
+- `fact_sales.sql`: SQL script for loading data into the fact table.
+
+## Usage
+
+1. Install Apache Airflow and configure the Airflow environment.
+2. Clone this repository.
+3. Place the DAG files in the Airflow DAGs directory (`$AIRFLOW_HOME/dags`).
+4. Execute the DAGs using the Airflow UI or CLI.
+5. Monitor the DAG runs and task executions in the Airflow UI.
+
+## Contributing
+
+Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
 ---

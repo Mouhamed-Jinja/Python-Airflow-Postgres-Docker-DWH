@@ -9,7 +9,7 @@ def database_engine(user, password, host, port, db):
 
 def Load_DimProduct(engine_conn):
     try:
-        with open('/opt/airflow/spark/app/sql_scd/dimproduct.sql') as file:
+        with open('/opt/airflow/app/sql_scd/dimproduct.sql') as file:
             sql_query = file.read()
         results = engine_conn.execute(text(sql_query)).fetchall()
     except Exception as e:
@@ -105,7 +105,7 @@ def Load_DimDate(engine_conn):
 
 def Fact_Sales(engine_conn):
     try:
-        with open('/opt/airflow/spark/app/sql_scd/fact_sales.sql') as file:
+        with open('/opt/airflow/app/sql_scd/fact_sales.sql') as file:
             query= file.read()
         result= engine_conn.execute(text(query))
         factDF= pd.DataFrame(result)
