@@ -1,7 +1,7 @@
 ---
 # Architecture:
 
-![Architecture](https://github.com/Mouhamed-Jinja/Python-Airflow-Postgres-Docker-DWH/assets/132110499/8c7d80f9-9f77-4dea-ae93-effa87727afd)
+![postgre_scd drawio_58144198](https://github.com/Mouhamed-Jinja/Python-Airflow-Postgres-Docker-DWH/assets/132110499/2561686b-a8d3-4ec8-b2a6-2c5af8518292)
 
 ## Airflow ETL Workflow
 
@@ -16,7 +16,7 @@ The ETL workflow consists of the following components:
 - **SQL Scripts**: SQL scripts for database operations, such as creating tables or performing Slowly Changing Dimension (SCD) updates.
 ## Data Pipeline:
 
-![data pipeline](https://github.com/Mouhamed-Jinja/Python-Airflow-Postgres-Docker-DWH/assets/132110499/883255ef-58cb-4a01-9273-cf315acfb4bb)
+![Architecture](https://github.com/Mouhamed-Jinja/Python-Airflow-Postgres-Docker-DWH/assets/132110499/8c7d80f9-9f77-4dea-ae93-effa87727afd)
 
 ## DAGs
 
